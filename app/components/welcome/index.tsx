@@ -174,16 +174,30 @@ const Welcome: FC<IWelcomeProps> = ({
     )
   }
 
-  const canChat = () => {
-    const inputLens = Object.values(inputs).length
-    const promptVariablesLens = promptConfig.prompt_variables.length
-    const emptyInput = inputLens < promptVariablesLens || Object.values(inputs).filter(v => v === '').length > 0
-    if (emptyInput) {
-      logError(t('app.errorMessage.valueOfVarRequired'))
-      return false
-    }
-    return true
+  // const canChat = () => {
+  //   const inputLens = Object.values(inputs).length
+  //   const promptVariablesLens = promptConfig.prompt_variables.length
+  //   const emptyInput = inputLens < promptVariablesLens || Object.values(inputs).filter(v => v === '').length > 0
+  //   if (emptyInput) {
+  //     logError(t('app.errorMessage.valueOfVarRequired'))
+  //     return false
+  //   }
+  //   return true
+  // }
+
+    const canChat = () => {
+
+  // 🔧 修复：只检查必填字段
+  const hasEmptyRequiredField = promptConfig.prompt_variables.some(variable => {
+    return variable.required && (!inputs[variable.key] || inputs[variable.key].trim() === '')
+  })
+  
+  if (hasEmptyRequiredField) {
+    logError(t('app.errorMessage.valueOfVarRequired'))
+    return false
   }
+  return true
+}
 
   const handleChat = () => {
     if (!canChat())

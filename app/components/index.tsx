@@ -277,23 +277,45 @@ const Main: FC<IMainProps> = () => {
     notify({ type: 'error', message })
   }
 
+  // const checkCanSend = () => {
+  //   if (currConversationId !== '-1')
+  //     return true
+
+  //   if (!currInputs || !promptConfig?.prompt_variables)
+  //     return true
+
+  //   const inputLens = Object.values(currInputs).length
+  //   const promptVariablesLens = promptConfig.prompt_variables.length
+
+  //   const emptyInput = inputLens < promptVariablesLens || Object.values(currInputs).find(v => !v)
+  //   if (emptyInput) {
+  //     logError(t('app.errorMessage.valueOfVarRequired'))
+  //     return false
+  //   }
+  //   return true
+  // }
+
   const checkCanSend = () => {
-    if (currConversationId !== '-1')
-      return true
-
-    if (!currInputs || !promptConfig?.prompt_variables)
-      return true
-
-    const inputLens = Object.values(currInputs).length
-    const promptVariablesLens = promptConfig.prompt_variables.length
-
-    const emptyInput = inputLens < promptVariablesLens || Object.values(currInputs).find(v => !v)
-    if (emptyInput) {
-      logError(t('app.errorMessage.valueOfVarRequired'))
-      return false
-    }
+  // 如果不是新对话，直接允许发送
+  if (currConversationId !== '-1')
     return true
+
+  // 如果没有输入或提示词配置，允许发送
+  if (!currInputs || !promptConfig?.prompt_variables)
+    return true
+
+  // 🔧 修复：只检查必填字段
+  const hasEmptyRequiredField = promptConfig.prompt_variables.some(variable => {
+    return variable.required && (!currInputs[variable.key] || currInputs[variable.key].trim() === '')
+  })
+  
+  if (hasEmptyRequiredField) {
+    logError(t('app.errorMessage.valueOfVarRequired'))
+    return false
   }
+  return true
+}
+
 
   const [controlFocus, setControlFocus] = useState(0)
   const [openingSuggestedQuestions, setOpeningSuggestedQuestions] = useState<string[]>([])
