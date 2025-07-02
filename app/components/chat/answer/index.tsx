@@ -134,6 +134,8 @@ const Answer: FC<IAnswerProps> = ({
     )
   }
 
+
+  //提取属于模型回答的图片
   const getImgs = (list?: VisionFile[]) => {
     if (!list)
       return []

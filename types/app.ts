@@ -27,6 +27,8 @@ export type TextTypeFormItem = {
   max_length: number
 }
 
+
+//选择类型表单项
 export type SelectTypeFormItem = {
   label: string
   variable: string
@@ -111,6 +113,8 @@ export type AppInfo = {
   default_language: Locale
   copyright?: string
   privacy_policy?: string
+  // 【新增】模型名称字段
+  modelName?: string
 }
 
 export enum Resolution {

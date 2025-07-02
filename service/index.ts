@@ -40,12 +40,14 @@ export const sendChatMessage = async (
   }, { onData, onCompleted, onThought, onFile, onError, getAbortController, onMessageEnd, onMessageReplace, onNodeStarted, onWorkflowStarted, onWorkflowFinished, onNodeFinished })
 }
 
+//获取左侧的会话列表
 export const fetchConversations = async () => {
   return get('conversations', { params: { limit: 100, first_id: '' } })
 }
 
+//拿id的列表
 export const fetchChatList = async (conversationId: string) => {
-  return get('messages', { params: { conversation_id: conversationId, limit: 20, last_id: '' } })
+  return get('messages', { params: { conversation_id: conversationId, limit: 100, last_id: '' } })
 }
 
 // init value. wait for server update
@@ -57,6 +59,7 @@ export const updateFeedback = async ({ url, body }: { url: string; body: Feedbac
   return post(url, { body })
 }
 
+//生成对话名称  暂时没调用了
 export const generationConversationName = async (id: string) => {
-  return post(`conversations/${id}/name`, { body: { auto_generate: true } })
+  return post(`conversations/${id}/name`, { body: { auto_generate: false } })
 }

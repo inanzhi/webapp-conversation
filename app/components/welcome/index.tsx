@@ -187,6 +187,20 @@ const Welcome: FC<IWelcomeProps> = ({
 
     const canChat = () => {
 
+
+    
+/*
+prompt variables
+
+prompt_variables:Array(4)
+0: key: "bot_opening_remarks"
+max_length: 48
+name: "bot_opening_remarks"
+options: []
+required: false
+type: "string"
+*/
+
   // 🔧 修复：只检查必填字段
   const hasEmptyRequiredField = promptConfig.prompt_variables.some(variable => {
     return variable.required && (!inputs[variable.key] || inputs[variable.key].trim() === '')
@@ -203,6 +217,8 @@ const Welcome: FC<IWelcomeProps> = ({
     if (!canChat())
       return
 
+    //在填写完roles_prompt和model_name后  聊天之前会打印填入的信息
+    console.log("handleChat inputs",inputs)
     onStartChat(inputs)
   }
 

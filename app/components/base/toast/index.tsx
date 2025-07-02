@@ -13,6 +13,7 @@ import { createContext, useContext } from 'use-context-selector'
 
 export type IToastProps = {
   type?: 'success' | 'error' | 'warning' | 'info'
+  // 持续时间
   duration?: number
   message: string
   children?: ReactNode

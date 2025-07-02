@@ -8,9 +8,11 @@ export const APP_INFO: AppInfo = {
   copyright: '',
   privacy_policy: '',
   default_language: 'zh-Hans',
+  // 【修改】设置默认模型名（用户未填入时的备用值）
+  modelName: '未知模型',
 }
 
-export const isShowPrompt = false
+export const isShowPrompt = true
 export const promptTemplate = 'I want you to act as a javascript console.'
 
 export const API_PREFIX = '/api'

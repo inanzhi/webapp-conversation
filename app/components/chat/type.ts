@@ -10,6 +10,7 @@ export type LogAnnotation = {
   created_at: number
 }
 
+//消息注解
 export type Annotation = {
   id: string
   authorName: string
@@ -17,12 +18,22 @@ export type Annotation = {
   created_at?: number
 }
 
+
+//消息评级
 export const MessageRatings = ['like', 'dislike', null] as const
+/**
+ * 定义了一个名为 MessageRating 的类型
+ * typeof MessageRatings 获取 MessageRatings 的类型
+ * [number] 是索引访问类型，表示获取数组所有元素的类型
+ * 最终结果是创建一个联合类型，包含数组所有可能的元素类型
+ * 类型等同于type MessageRating = "like" | "dislike" | null
+ */
 export type MessageRating = typeof MessageRatings[number]
 
 export type MessageMore = {
   time: string
   tokens: number
+  //延迟
   latency: number | string
 }
 
@@ -55,6 +66,8 @@ export type ThoughtItem = {
   message_files?: VisionFile[]
 }
 
+
+//引用项
 export type CitationItem = {
   content: string
   data_source_type: string
@@ -95,6 +108,7 @@ export type IChatItem = {
    */
   more?: MessageMore
   annotation?: Annotation
+  //用户当前头像
   useCurrentUserAvatar?: boolean
   isOpeningStatement?: boolean
   suggestedQuestions?: string[]
