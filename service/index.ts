@@ -66,11 +66,15 @@ export const generationConversationName = async (id: string) => {
 }
 
 
-
-
 //添加roles_infos接口信息
 // 根据模型名称获取角色提示列表
-export const fetchRolesInfos = async (modelName: string) =>{
-  return  get('roles-infos', { params: { model_name: modelName } })
+// export const fetchRolesInfos = async (modelName: string) =>{
+//   // 直接调用后端服务，绕过API_PREFIX
+//   const response = await fetch(`http://localhost:8080/api/v1/prompts/query/${modelName}`)
+//   return response.json()
+// }
 
+
+export const fetchRolesInfos = async (modelName: string) =>{
+  return get(`/v1/prompts/query/${modelName}`)
 }

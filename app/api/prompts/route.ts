@@ -4,15 +4,15 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const modelName = searchParams.get('model_name')
-
+    
     if (!modelName) {
       return NextResponse.json({ error: 'model_name is required' }, { status: 400 })
     }
 
     // 这里调用您的后端服务获取数据
-    const response = await fetch(`localhost:8080/api/v1/prompts/query/:${modelName}`)
+    const response = await fetch(`/query/${modelName}`)
     const data = await response.json()
-
+    
     // 示例返回数据格式
     const responseMockData = {
       data: [
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
           bot_opening_remarks: "欢迎！我是钰瑾",
           model_name: modelName
         },
-        {
+         {
           id: "3",
           name: "钰瑾角色设定2",
           roles_prompt: `{
@@ -84,8 +84,8 @@ export async function GET(request: NextRequest) {
         }
       ]
     }
-
-
+    
+    
     return NextResponse.json(data)
   } catch (error) {
     console.error('Error fetching roles prompts:', error)
