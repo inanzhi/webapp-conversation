@@ -227,3 +227,25 @@ export enum CodeLanguage {
   javascript = 'javascript',
   json = 'json',
 }
+
+
+
+export interface RolesInfosItem {
+  id: string
+  name: string
+  roles_prompt: string
+  bot_opening_remarks?: string
+  model_name: string
+}
+
+
+export interface ApiResponse<T> {
+  data: T
+  message?: string
+  code?: number
+}
+
+export interface RolesInfosResponse {
+  data: RolesInfosItem[]
+}
+

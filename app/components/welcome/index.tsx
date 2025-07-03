@@ -6,10 +6,12 @@ import TemplateVarPanel, { PanelTitle, VarOpBtnGroup } from '../value-panel'
 import FileUploaderInAttachmentWrapper from '../base/file-uploader-in-attachment'
 import s from './style.module.css'
 import { AppInfoComp, ChatBtn, EditBtn, FootLogo, PromptTemplate } from './massive-component'
-import type { AppInfo, PromptConfig } from '@/types/app'
+import type { AppInfo, PromptConfig, RolesInfosItem} from '@/types/app'
 import Toast from '@/app/components/base/toast'
 import Select from '@/app/components/base/select'
 import { DEFAULT_VALUE_MAX_LEN } from '@/config'
+
+import { fetchRolesInfos } from '@/service'
 
 // regex to match the {{}} and replace it with a span
 const regex = /\{\{([^}]+)\}\}/g
@@ -53,6 +55,19 @@ const Welcome: FC<IWelcomeProps> = ({
     }
     return res
   })())
+
+ // 为了roles_prompt添加这些缺失的状态变量 
+  const [rolesPromptOptions, setRolesPromptOptions] = useState<RolesInfosItem[]>([])
+  const [rolesPromptLoading, setRolesPromptLoading] = useState(false)
+  const [currentModelName, setCurrentModelName] = useState('')
+  //添加结束
+
+
+   // 新增：从加载的角色列表中 搜索具体角色
+  const [roleSearchText, setRoleSearchText] = useState('')
+  const [filteredRolesOptions, setFilteredRolesOptions] = useState<RolesInfosItem[]>([])
+  //添加结束
+
   useEffect(() => {
     if (!savedInputs) {
       const res: Record<string, any> = {}
@@ -67,6 +82,49 @@ const Welcome: FC<IWelcomeProps> = ({
       setInputs(savedInputs)
     }
   }, [savedInputs])
+
+// 新增：角色搜索过滤逻辑
+useEffect(() => {
+  if (roleSearchText.trim() === '') {
+    setFilteredRolesOptions(rolesPromptOptions)
+  } else {
+    const filtered = rolesPromptOptions.filter(option => 
+      option.name.toLowerCase().includes(roleSearchText.toLowerCase())
+    )
+    setFilteredRolesOptions(filtered)
+  }
+}, [roleSearchText, rolesPromptOptions])
+
+//新增结束
+
+//新增监听model_name变化 自动调用API来获取对应的角色信息
+
+useEffect(() => {
+  const modelName = inputs?.['model_name']
+  if (modelName && modelName.trim() !== '') {
+    setRolesPromptLoading(true)
+    fetchRolesInfos(modelName)
+      .then((response:any) => {
+        if (response.data && Array.isArray(response.data)) {
+          setRolesPromptOptions(response.data)
+        } else {
+          setRolesPromptOptions([])
+        }
+      })
+      .catch((error) => {
+        console.error('获取角色信息失败:', error)
+        setRolesPromptOptions([])
+        logError('获取角色信息失败，请重试')
+      })
+      .finally(() => {
+        setRolesPromptLoading(false)
+      })
+  } else {
+    // 如果没有模型名，清空角色选项
+    setRolesPromptOptions([])
+  }
+}, [inputs?.['model_name']]) // 监听model_name的变
+
 
   const highLightPromoptTemplate = (() => {
     if (!promptConfig)
@@ -96,7 +154,147 @@ const Welcome: FC<IWelcomeProps> = ({
         {promptConfig.prompt_variables.map(item => (
           <div className='tablet:flex items-start mobile:space-y-2 tablet:space-y-0 mobile:text-xs tablet:text-sm' key={item.key}>
             <label className={`flex-shrink-0 flex items-center tablet:leading-9 mobile:text-gray-700 tablet:text-gray-900 mobile:font-medium pc:font-normal ${s.formLabel}`}>{item.name}</label>
-            {item.type === 'select'
+            
+
+{/* 特殊处理 roles_prompt 字段 */}
+{item.key === 'roles_prompt' && (
+  <div className='w-full space-y-2'>
+    {/* 搜索输入框 */}
+    <input
+      type="text"
+      className='w-full py-2 pl-3 pr-3 box-border rounded-lg bg-gray-50 border border-gray-300'
+      placeholder="搜索预设角色..."
+      value={roleSearchText}
+      onChange={(e) => setRoleSearchText(e.target.value)}
+    />
+    
+    {/* 搜索结果列表 - 只在搜索时显示 */}
+    {roleSearchText && (
+      <div>
+        {filteredRolesOptions.length > 0 ? (
+          <div className='max-h-48 overflow-y-auto border border-gray-300 rounded-lg bg-white'>
+            {filteredRolesOptions.map((option, index) => (
+              <div
+                key={`${option.name}-${index}`}
+                className='px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0'
+                onClick={() => {
+                  setInputs({
+                    ...inputs,
+                    [item.key]: option.roles_prompt,
+                    'bot_opening_remarks': option.bot_opening_remarks || ''
+                  })
+                  // 选择后清空搜索框
+                  setRoleSearchText('')
+                }}
+              >
+                <div className='font-medium text-gray-900'>{option.name}</div>
+                {option.roles_prompt && (
+                  <div className='text-xs text-gray-500 mt-1 truncate'>
+                    {option.roles_prompt.substring(0, 100)}...
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className='text-xs text-gray-500 py-2'>
+            未找到匹配的角色
+          </div>
+        )}
+        <div className='text-xs text-gray-500 mt-1'>
+          找到 {filteredRolesOptions.length} 个匹配的角色
+        </div>
+      </div>
+    )}
+    
+    {/* 默认的select下拉框 - 不搜索时显示 */}
+    {!roleSearchText && (
+      <select
+        className='w-full py-2 pl-3 pr-3 box-border rounded-lg bg-gray-50 border border-gray-300'
+        value=""
+        onChange={(e) => {
+          if (e.target.value) {
+            const selectedOption = rolesPromptOptions.find(option => option.name === e.target.value)
+            if (selectedOption) {
+              setInputs({
+                ...inputs,
+                [item.key]: selectedOption.roles_prompt,
+                'bot_opening_remarks': selectedOption.bot_opening_remarks || ''
+              })
+            }
+          }
+        }}
+        disabled={rolesPromptLoading}
+      >
+        <option value=''>选择预设角色...</option>
+        {rolesPromptOptions.map((option, index) => (
+          <option key={`${option.name}-${index}`} value={option.name}>
+            {option.name}
+          </option>
+        ))}
+      </select>
+    )}
+    
+      <textarea
+      className="w-full h-[200px] flex-grow py-2 pl-3 pr-3 box-border rounded-lg bg-gray-50"
+      placeholder={`${item.name}${!item.required ? `(${t('app.variableTable.optional')})` : ''}`}
+      value={inputs?.[item.key] || ''}
+      onChange={(e) => { setInputs({ ...inputs, [item.key]: e.target.value }) }}
+    />
+    {rolesPromptLoading && (
+      <div className='text-sm text-gray-500'>加载预设角色中...</div>
+    )}
+  </div>
+)}
+
+          {/* 特殊处理 bot_opening_remarks 字段 */}
+          {item.key === 'bot_opening_remarks' && (
+            <div className='w-full'>
+              <textarea
+                className="w-full h-[104px] flex-grow py-2 pl-3 pr-3 box-border rounded-lg bg-gray-50"
+                placeholder={`${item.name}${!item.required ? `(${t('app.variableTable.optional')})` : ''} - 选择角色预设时自动填充`}
+                value={inputs?.[item.key] || ''}
+                onChange={(e) => { setInputs({ ...inputs, [item.key]: e.target.value }) }}
+              />
+            </div>
+          )}
+          
+          {/* 原有的类型判断，需要排除 roles_prompt 和 bot_opening_remarks */}
+          {item.key !== 'roles_prompt' && item.key !== 'bot_opening_remarks' && item.type === 'select' && (
+            <Select
+              className='w-full'
+              defaultValue={inputs?.[item.key]}
+              onSelect={(i) => { setInputs({ ...inputs, [item.key]: i.value }) }}
+              items={(item.options || []).map(i => ({ name: i, value: i }))}
+              allowSearch={false}
+              bgClassName='bg-gray-50'
+            />
+          )}
+          {item.key !== 'roles_prompt' && item.key !== 'bot_opening_remarks' && item.type === 'string' && (
+            <input
+              placeholder={`${item.name}${!item.required ? `(${t('app.variableTable.optional')})` : ''}`}
+              value={inputs?.[item.key] || ''}
+              onChange={(e) => { setInputs({ ...inputs, [item.key]: e.target.value }) }}
+              className={'w-full flex-grow py-2 pl-3 pr-3 box-border rounded-lg bg-gray-50'}
+              maxLength={item.max_length || DEFAULT_VALUE_MAX_LEN}
+            />
+          )}
+          {item.key !== 'roles_prompt' && item.key !== 'bot_opening_remarks' && item.type === 'paragraph' && (
+            <textarea
+              className="w-full h-[104px] flex-grow py-2 pl-3 pr-3 box-border rounded-lg bg-gray-50"
+              placeholder={`${item.name}${!item.required ? `(${t('app.variableTable.optional')})` : ''}`}
+              value={inputs?.[item.key] || ''}
+              onChange={(e) => { setInputs({ ...inputs, [item.key]: e.target.value }) }}
+            />
+          )}
+
+
+
+           { /*结束处理roles_prompt和bot_opening_remarks处理 */}
+            
+            
+            
+            {/* {item.type === 'select'
               && (
                 <Select
                   className='w-full'
@@ -132,7 +330,7 @@ const Welcome: FC<IWelcomeProps> = ({
                 value={inputs[item.key]}
                 onChange={(e) => { onInputsChange({ ...inputs, [item.key]: e.target.value }) }}
               />
-            )}
+            )} */}
 
             {
               item.type === 'file' && (
@@ -375,10 +573,10 @@ type: "string"
     <div className='relative mobile:min-h-[48px] tablet:min-h-[64px]'>
       {hasSetInputs && renderHeader()}
       <div className='mx-auto pc:w-[794px] max-w-full mobile:w-full px-3.5'>
-        {/*  Has't set inputs  */}
+              {/*  Has't set inputs  */}
         {
           !hasSetInputs && (
-            <div className='mobile:pt-[72px] tablet:pt-[128px] pc:pt-[200px]'>
+            <div className='mobile:pt-[32px] tablet:pt-[48px] pc:pt-[80px]'>
               {hasVar
                 ? (
                   renderVarPanel()

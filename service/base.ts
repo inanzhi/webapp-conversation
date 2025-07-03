@@ -424,6 +424,8 @@ export const get = (url: string, options = {}, otherOptions?: IOtherOptions) => 
   return request(url, Object.assign({}, options, { method: 'GET' }), otherOptions)
 }
 
+
+
 export const post = (url: string, options = {}, otherOptions?: IOtherOptions) => {
   return request(url, Object.assign({}, options, { method: 'POST' }), otherOptions)
 }
@@ -435,3 +437,5 @@ export const put = (url: string, options = {}, otherOptions?: IOtherOptions) => 
 export const del = (url: string, options = {}, otherOptions?: IOtherOptions) => {
   return request(url, Object.assign({}, options, { method: 'DELETE' }), otherOptions)
 }
+
+

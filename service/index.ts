@@ -1,6 +1,7 @@
 import type { IOnCompleted, IOnData, IOnError, IOnFile, IOnMessageEnd, IOnMessageReplace, IOnNodeFinished, IOnNodeStarted, IOnThought, IOnWorkflowFinished, IOnWorkflowStarted } from './base'
 import { get, post, ssePost } from './base'
-import type { Feedbacktype } from '@/types/app'
+import type { Feedbacktype,RolesInfosResponse} from '@/types/app'
+
 
 export const sendChatMessage = async (
   body: Record<string, any>,
@@ -62,4 +63,14 @@ export const updateFeedback = async ({ url, body }: { url: string; body: Feedbac
 //生成对话名称  暂时没调用了
 export const generationConversationName = async (id: string) => {
   return post(`conversations/${id}/name`, { body: { auto_generate: false } })
+}
+
+
+
+
+//添加roles_infos接口信息
+// 根据模型名称获取角色提示列表
+export const fetchRolesInfos = async (modelName: string) =>{
+  return  get('roles-infos', { params: { model_name: modelName } })
+
 }
