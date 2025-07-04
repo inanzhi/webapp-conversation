@@ -1,6 +1,6 @@
 'use client'
 import type { FC } from 'react'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import TemplateVarPanel, { PanelTitle, VarOpBtnGroup } from '../value-panel'
 import FileUploaderInAttachmentWrapper from '../base/file-uploader-in-attachment'
@@ -83,19 +83,20 @@ const Welcome: FC<IWelcomeProps> = ({
     }
   }, [savedInputs])
 
-// 新增：角色搜索过滤逻辑
-useEffect(() => {
-  if (roleSearchText.trim() === '') {
-    setFilteredRolesOptions(rolesPromptOptions)
-  } else {
-    const filtered = rolesPromptOptions.filter(option => 
-      option.name.toLowerCase().includes(roleSearchText.toLowerCase())
-    )
-    setFilteredRolesOptions(filtered)
-  }
-}, [roleSearchText, rolesPromptOptions])
+  // 新增：角色搜索过滤逻辑
+  useEffect(() => {
+    if (roleSearchText.trim() !== '') {
+      const filtered = rolesPromptOptions.filter(option =>
+        option.name.toLowerCase().includes(roleSearchText.toLowerCase()),
+      )
+      setFilteredRolesOptions(filtered)
+    }
+    else {
+      setFilteredRolesOptions([])
+    }
+  }, [roleSearchText, rolesPromptOptions])
 
-//新增结束
+  // 新增结束
 
 //新增监听model_name变化 自动调用API来获取对应的角色信息
 
@@ -126,14 +127,14 @@ useEffect(() => {
 }, [inputs?.['model_name']]) // 监听model_name的变
 
 
-  const highLightPromoptTemplate = (() => {
+  const highLightPromoptTemplate = useMemo(() => {
     if (!promptConfig)
       return ''
     const res = promptConfig.prompt_template.replace(regex, (match, p1) => {
       return `<span class='text-gray-800 font-bold'>${inputs?.[p1] ? inputs?.[p1] : match}</span>`
     })
     return res
-  })()
+  }, [promptConfig, inputs])
 
   const { notify } = Toast
   const logError = (message: string) => {
@@ -181,7 +182,7 @@ useEffect(() => {
                   setInputs({
                     ...inputs,
                     [item.key]: option.roles_prompt,
-                    'bot_opening_remarks': option.bot_opening_remarks || ''
+                    'bot_opening_remarks': option.bot_opening_remarks || '',
                   })
                   // 选择后清空搜索框
                   setRoleSearchText('')

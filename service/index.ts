@@ -67,14 +67,17 @@ export const generationConversationName = async (id: string) => {
 
 
 //添加roles_infos接口信息
-// 根据模型名称获取角色提示列表
-// export const fetchRolesInfos = async (modelName: string) =>{
-//   // 直接调用后端服务，绕过API_PREFIX
+// 根据模型名称获取角色提示列表 - 直接请求后端服务
+// export const fetchRolesInfos = async (modelName: string) => {
+//   // 直接调用后端服务，不走 Next.js API 路由
 //   const response = await fetch(`http://localhost:8080/api/v1/prompts/query/${modelName}`)
+//   if (!response.ok) {
+//     throw new Error(`HTTP error! status: ${response.status}`)
+//   }
 //   return response.json()
 // }
 
 
 export const fetchRolesInfos = async (modelName: string) =>{
-  return get(`/v1/prompts/query/${modelName}`)
+  return get('prompts', { params: { model_name: modelName } })
 }
