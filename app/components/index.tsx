@@ -93,9 +93,8 @@ const Main: FC<IMainProps> = () => {
    * @returns 提取的名称，用'-'连接
    */
   const extractNamesFromJson = (jsonStr: string | undefined | null): string => {
-    if (jsonStr == undefined||null||"") {
+    if (!jsonStr)
       return ''
-    }
     try {
       const data = JSON.parse(jsonStr)
       const names = Object.keys(data)
