@@ -34,7 +34,7 @@ import { replaceVarWithValues, userInputsFormToPromptVariables } from '@/utils/p
 // 应用不可用组件
 import AppUnavailable from '@/app/components/app-unavailable'
 // 配置常量
-import { API_KEY, APP_ID, APP_INFO, isShowPrompt, promptTemplate } from '@/config'
+import { API_KEY, APP_ID, APP_INFO, isShowPrompt, promptTemplate, MODEL_NAME } from '@/config'
 // 日志注解类型
 import type { Annotation as AnnotationType } from '@/types/log'
 // 工具函数
@@ -79,6 +79,8 @@ const Main: FC<IMainProps> = () => {
   const [inited, setInited] = useState<boolean>(false)
   // 在移动端，通过点击按钮显示侧边栏
   const [isShowSidebar, { setTrue: showSidebar, setFalse: hideSidebar }] = useBoolean(false)
+  // 添加桌面端右侧历史记录显示控制
+  const [isShowDesktopSidebar, { toggle: toggleDesktopSidebar }] = useBoolean(true)
   // 视觉配置（图片上传相关）
   const [visionConfig, setVisionConfig] = useState<VisionSettings | undefined>({
     enabled: false,
@@ -955,29 +957,41 @@ const updatedConversations = produce(allConversations, (draft: ConversationItem[
         isMobile={isMobile}
         onShowSideBar={showSidebar}
         onCreateNewChat={() => handleConversationIdChange('-1')}
-        // 【修改】使用用户输入的模型名，如果没有则使用配置的默认值
-        modelName={userModelName || APP_INFO.modelName}
+        // 直接使用配置的模型名
+        modelName={APP_INFO.modelName}
       />
       <div className="flex rounded-t-2xl bg-white overflow-hidden">
-        {/* 侧边栏 */}
-        {!isMobile && renderSidebar()}
-        {/* 移动端侧边栏（模态框形式） */}
-        {isMobile && isShowSidebar && (
-          <div className='fixed inset-0 z-50'
-            style={{ backgroundColor: 'rgba(35, 56, 118, 0.2)' }}
-            onClick={hideSidebar}
-          >
-            <div className='inline-block' onClick={e => e.stopPropagation()}>
-              {renderSidebar()}
+        {/* 左侧模型选择区域 */}
+        {!isMobile && (
+          <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-800">当前模型</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2">
+              {/* 显示当前配置的模型 */}
+              <div className="space-y-2">
+                <div className="p-3 bg-blue-50 rounded-lg shadow-sm border border-blue-300">
+                  <div className="font-medium text-blue-800">{MODEL_NAME || 'SenseChat-Character-Pro-Q'}</div>
+                  <div className="text-sm text-blue-600">当前激活的模型</div>
+                  <div className="text-xs text-gray-500 mt-1">配置文件: .env</div>
+                </div>
+                
+                {/* 提示信息 */}
+                <div className="p-3 bg-gray-100 rounded-lg">
+                  <div className="text-sm text-gray-600">
+                    💡 要切换模型，请修改 .env 文件中的 NEXT_PUBLIC_MODEL_NAME 配置
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
-        {/* 主内容区域 */}
+        
+        {/* 中间聊天区域 */}
         <div className='flex-grow flex flex-col h-[calc(100vh_-_3rem)] overflow-y-auto'>
           {/* 配置场景组件 */}
           <ConfigSence
-            // 【修改】使用动态生成的对话名称
-            conversationName={extractNamesFromJson(currInputs?.roles_prompt)} //显示在内对话框的左上角的
+            conversationName={extractNamesFromJson(currInputs?.roles_prompt)}
             hasSetInputs={hasSetInputs}
             isPublicVersion={isShowPrompt}
             siteInfo={APP_INFO}
@@ -1005,6 +1019,59 @@ const updatedConversations = produce(allConversations, (draft: ConversationItem[
               </div>)
           }
         </div>
+        
+        {/* 右侧控制区域：明显的新对话按钮和隐藏/展开按钮 */}
+        {!isMobile && (
+          <div className="w-12 bg-white border-l border-gray-200 flex flex-col items-center py-4 space-y-3">
+            {/* 新对话按钮 - 更大更明显 */}
+            <button
+              onClick={() => handleConversationIdChange('-1')}
+              className="w-10 h-10 bg-blue-500 hover:bg-blue-600 rounded-lg shadow-md transition-all duration-200 flex items-center justify-center group hover:scale-105"
+              title="新对话"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+            
+            {/* 分隔线 */}
+            <div className="w-6 h-px bg-gray-200"></div>
+            
+            {/* 隐藏/展开历史记录按钮 */}
+            <button
+              onClick={toggleDesktopSidebar}
+              className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors flex items-center justify-center"
+              title={isShowDesktopSidebar ? "隐藏历史" : "显示历史"}
+            >
+              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {isShowDesktopSidebar ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                )}
+              </svg>
+            </button>
+          </div>
+        )}
+        
+        {/* 右侧历史记录区域：可隐藏 */}
+        {!isMobile && isShowDesktopSidebar && (
+          <div className="w-80 border-l border-gray-200">
+            {renderSidebar()}
+          </div>
+        )}
+        
+        {/* 移动端侧边栏（模态框形式） */}
+        {isMobile && isShowSidebar && (
+          <div className='fixed inset-0 z-50'
+            style={{ backgroundColor: 'rgba(35, 56, 118, 0.2)' }}
+            onClick={hideSidebar}
+          >
+            <div className='inline-block' onClick={e => e.stopPropagation()}>
+              {renderSidebar()}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

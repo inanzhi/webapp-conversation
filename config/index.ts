@@ -2,14 +2,22 @@ import type { AppInfo } from '@/types/app'
 export const APP_ID = `${process.env.NEXT_PUBLIC_APP_ID}`
 export const API_KEY = `${process.env.NEXT_PUBLIC_APP_KEY}`
 export const API_URL = `${process.env.NEXT_PUBLIC_API_URL}`
+//*****************修改开始******//
+export const MODEL_NAME = `${process.env.NEXT_PUBLIC_MODEL_NAME}`
+//*****************修改结束******//
+
 export const APP_INFO: AppInfo = {
   title: 'Chat APP',
   description: '',
   copyright: '',
   privacy_policy: '',
   default_language: 'zh-Hans',
-  // 【修改】设置默认模型名（用户未填入时的备用值）
-  modelName: '未知模型',
+  //*****************修改开始******//
+  // 使用环境变量中的模型名
+  modelName: MODEL_NAME || '未知模型',
+
+ 
+  //*****************修改结束******//
 }
 
 export const isShowPrompt = true

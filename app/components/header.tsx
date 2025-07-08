@@ -42,14 +42,16 @@ const Header: FC<IHeaderProps> = ({
           </div>
         )}
       </div>
-      {isMobile
-        ? (
-          <div className='flex items-center justify-center h-8 w-8 cursor-pointer'
-            onClick={() => onCreateNewChat?.()}
-          >
-            <PencilSquareIcon className="h-4 w-4 text-gray-500" />
-          </div>)
-        : <div></div>}
+      {/* 只在移动端显示新对话按钮 */}
+      {isMobile && (
+        <div className='flex items-center justify-center h-8 w-8 cursor-pointer'
+          onClick={() => onCreateNewChat?.()}
+        >
+          <PencilSquareIcon className="h-4 w-4 text-gray-500" />
+        </div>
+      )}
+      {/* 桌面端右侧留空 */}
+      {!isMobile && <div></div>}
     </div>
   )
 }
